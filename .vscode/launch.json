@@ -11,7 +11,7 @@
             "type": "cppdbg",
             "request": "launch",
             "launchCompleteCommand": "None",   
-            "program": "${workspaceFolder}/build/app.ino.elf",
+            "program": "${workspaceFolder}/build/${fileBasename}.elf",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

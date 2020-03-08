@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "Blink\\Blink.ino",
+    "sketch": "Farbmischer\\Farbmischer.ino",
     "port": "COM4",
     "output": "./build"
 }
