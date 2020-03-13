@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "Farbmischer\\Farbmischer.ino",
+    "sketch": "FFTLibraryExample\\FFTLibraryExample.ino",
     "port": "COM4",
     "output": "./build"
 }

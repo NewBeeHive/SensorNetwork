@@ -3,6 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
+                "C:\\Program Files (x86)\\Arduino\\libraries\\FFT",
+                "C:\\Program Files (x86)\\Arduino\\libraries\\Servo\\src",
+                "C:\\Program Files (x86)\\Arduino\\libraries\\Stepper\\src",
+                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\MySensors-2.3.0",
                 "C:\\Program Files (x86)\\Arduino\\libraries\\avr-debugger\\src",
                 "C:\\Program Files (x86)\\Arduino\\tools\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**"
