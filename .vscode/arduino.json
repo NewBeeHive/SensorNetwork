@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "FFTLibraryExample\\FFTLibraryExample.ino",
+    "sketch": "BeeSensor\\BeeSensor.ino",
     "port": "COM4",
     "output": "./build"
 }
