@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "LoadCellDHT\\LoadCellDHT.ino",
+    "port": "COM4",
+    "output": "./build"
+}

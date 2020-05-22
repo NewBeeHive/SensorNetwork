@@ -3,13 +3,13 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\DHT_sensor_library",
                 "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\MySensors",
                 "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\HX711_ADC\\src",
                 "C:\\Program Files (x86)\\Arduino\\tools\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**"
             ],
             "forcedInclude": [
+                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\MySensors",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
             ],
             "intelliSenseMode": "msvc-x64",

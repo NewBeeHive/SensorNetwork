@@ -33,12 +33,21 @@
  */
 
 // Enable debug prints
-#define MY_DEBUG
+//#define MY_DEBUG
 
 // Enable and select radio type attached 
+////#define MY_RADIO_RF24
+//#define MY_RADIO_RFM69
+//#define MY_RS485
 #define MY_RADIO_RF24
+//#define MY_RF24_PA_LEVEL RF24_PA_LOW
+//#define MY_GATEWAY_SERIAL 1
 
+#include <config.h>
+#include <HX711_ADC.h>
+#include <SPI.h>
 #include <MySensors.h>  
+//#include <DHT_U.h>
 #include <DHT.h>
 
 // Set this to the pin you connected the DHT's data pin to
@@ -71,6 +80,26 @@ MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 DHT dht;
 
+//-------------------------------------------------------------------------------------
+// HX711_ADC.h
+// Arduino master library for HX711 24-Bit Analog-to-Digital Converter for Weigh Scales
+// Olav Kallhovd sept2017
+// Tested with      : HX711 asian module on channel A and YZC-133 3kg load cell
+// Tested with MCU  : Arduino Nano, ESP8266
+//-------------------------------------------------------------------------------------
+// This is an example sketch on how to use this library
+// Settling time (number of samples) and data filtering can be adjusted in the config.h file
+
+//#include <EEPROM.h>
+
+//HX711 constructor (dout pin, sck pin):
+HX711_ADC LoadCell(4, 5);
+
+const int eepromAdress = 0;
+
+long t;
+
+
 void presentation()  
 { 
   // Send the sketch version information to the gateway
@@ -83,29 +112,70 @@ void presentation()
   metric = getControllerConfig().isMetric;
 }
 
+void setup() {
 
-void setup()
-{
-  Serial.begin(115200);
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
-    Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
+    //Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
   }
   // Sleep for the time of the minimum sampling period to give the sensor time to powesr up
   // (otherwise, timeout errors might occure for the first reading)
   sleep(dht.getMinimumSamplingPeriod());
+
+  float calValue; // calibration value
+  calValue = 883.73; // uncomment this if you want to set this value in the sketch 
+  #if defined(ESP8266) 
+  //EEPROM.begin(512); // uncomment this if you use ESP8266 and want to fetch the value from eeprom
+  #endif
+  //EEPROM.get(eepromAdress, calValue); // uncomment this if you want to fetch the value from eeprom
+  
+  //Serial.begin(9600); delay(10);
+  Serial.println();
+  Serial.println("Starting...");
+  LoadCell.begin();
+  long stabilisingtime = 2000; // tare preciscion can be improved by adding a few seconds of stabilising time
+  LoadCell.start(stabilisingtime);
+  if(LoadCell.getTareTimeoutFlag()) {
+    Serial.println("Tare timeout, check MCU>HX711 wiring and pin designations");
+  }
+  else {
+    LoadCell.setCalFactor(calValue); // set calibration value (float)
+    Serial.println("Startup + tare is complete");
+  }
 }
 
+void loop() {
+  //update() should be called at least as often as HX711 sample rate; >10Hz@10SPS, >80Hz@80SPS
+  //use of delay in sketch will reduce effective sample rate (be carefull with use of delay() in the loop)
+  LoadCell.update();
 
-void loop()      
-{  
+  //get smoothed value from data set
+  if (millis() > t + 250) {
+    float i = LoadCell.getData();
+    Serial.print("Load_cell output val: ");
+    Serial.println(i);
+    t = millis();
+  }
+
+  //receive from serial terminal
+  if (Serial.available() > 0) {
+    float i;
+    char inByte = Serial.read();
+    if (inByte == 't') LoadCell.tareNoDelay();
+  }
+
+  //check if last tare operation is complete
+  if (LoadCell.getTareStatus() == true) {
+    Serial.println("Tare complete");
+  }
+
   // Force reading sensor, so it works also after sleep()
   dht.readSensor(true);
 
   // Get temperature from DHT library
   float temperature = dht.getTemperature();
   if (isnan(temperature)) {
-    Serial.println("Failed reading temperature from DHT!");
+    //Serial.println("Failed reading temperature from DHT!");
   } else if (temperature != lastTemp || nNoUpdatesTemp == FORCE_UPDATE_N_READS) {
     // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
     lastTemp = temperature;
@@ -133,7 +203,7 @@ void loop()
   //float humidity = dht.getHumidity();
   float humidity=0.0;
   if (isnan(humidity)) {
-    Serial.println("Failed reading humidity from DHT");
+    //Serial.println("Failed reading humidity from DHT");
   } else if (humidity != lastHum || nNoUpdatesHum == FORCE_UPDATE_N_READS) {
     // Only send humidity if it changed since the last measurement or if we didn't send an update for n times
     lastHum = humidity;
@@ -152,57 +222,4 @@ void loop()
 
   // Sleep for a while to save energy
   sleep(UPDATE_INTERVAL); 
-}// #include "arduinoFFT.h"
- 
-// #define SAMPLES 128             //Must be a power of 2
-// #define SAMPLING_FREQUENCY 5000 //Hz, must be less than 10000 due to ADC
- 
-// arduinoFFT FFT = arduinoFFT();
- 
-// unsigned int sampling_period_us;
-// unsigned long microseconds;
- 
-// double vReal[SAMPLES];
-// double vImag[SAMPLES];
- 
-// void setup() {
-//     Serial.begin(115200);
- 
-//     sampling_period_us = round(1000000*(1.0/SAMPLING_FREQUENCY));
-// }
- 
-// void loop() {
-   
-//     /*SAMPLING*/
-//     for(int i=0; i<SAMPLES; i++)
-//     {
-//         microseconds = micros();    //Overflows after around 70 minutes!
-     
-//         vReal[i] = analogRead(0);
-//         vImag[i] = 0;
-     
-//         while(micros() < (microseconds + sampling_period_us)){
-//         }
-//     }
- 
-//     /*FFT*/
-//     FFT.Windowing(vReal, SAMPLES, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-//     FFT.Compute(vReal, vImag, SAMPLES, FFT_FORWARD);
-//     FFT.ComplexToMagnitude(vReal, vImag, SAMPLES);
-//     double peak = FFT.MajorPeak(vReal, SAMPLES, SAMPLING_FREQUENCY);
- 
-//     /*PRINT RESULTS*/
-//     //Serial.println(peak);     //Print out what frequency is the most dominant.
- 
-//     for(int i=10; i<(SAMPLES/2); i++)
-//     {
-//         /*View all these three lines in serial terminal to see which frequencies has which amplitudes*/
-         
-//         Serial.print((i * 1.0 * SAMPLING_FREQUENCY) / SAMPLES, 1);
-//         Serial.print(" ");
-//         Serial.println(vReal[i], 1);    //View only this line in serial plotter to visualize the bins
-//     }
-
-//     delay(1000);  //Repeat the process every second OR:
-//     //while(1);       //Run code once
-// }
+}
