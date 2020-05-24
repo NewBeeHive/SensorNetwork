@@ -1,6 +1,5 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "BeeSensor\\BeeSensor.ino",
-    "port": "COM4",
-    "output": "./build"
+    "sketch": "LoadCellDHT/LoadCellDHT.ino",
+    "port": "/dev/ttyACM0"
 }

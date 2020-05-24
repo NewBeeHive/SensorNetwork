@@ -1,20 +1,17 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Linux",
             "includePath": [
-                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\DHT_sensor_library",
-                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\MySensors",
-                "C:\\Users\\tb10wil\\Documents\\Arduino\\libraries\\HX711_ADC\\src",
-                "C:\\Program Files (x86)\\Arduino\\tools\\**",
-                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**"
+                "/home/markus/arduino-1.8.12/tools/**",
+                "/home/markus/arduino-1.8.12/hardware/arduino/avr/**"
             ],
             "forcedInclude": [
-                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
+                "/home/markus/arduino-1.8.12/hardware/arduino/avr/cores/arduino/Arduino.h"
             ],
-            "intelliSenseMode": "msvc-x64",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
-            "cStandard": "c11",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
             "cppStandard": "c++17"
         }
     ],
