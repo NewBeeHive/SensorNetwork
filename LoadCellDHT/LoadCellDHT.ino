@@ -33,7 +33,8 @@
  */
 
 // Enable debug prints
-#define MY_DEBUG
+//#define MY_DEBUG
+#define MY_LOCAL_DEBUG
 
 // Enable and select radio type attached 
 ////#define MY_RADIO_RF24
@@ -155,12 +156,12 @@ void loop() {
   //get smoothed value from data set
   if (millis() > t + 250) {
     float i = LoadCell.getData();
-#ifdef MY_DEBUG
+#ifdef MY_LOCAL_DEBUG
     
     Serial.print("Load_cell output val: ");
     Serial.println(i);
 #endif    
-    send(msgLoad.set(&i));
+    send(msgLoad.set(i,1));
     t = millis();
   }
 
@@ -173,7 +174,7 @@ void loop() {
 
   //check if last tare operation is complete
   if (LoadCell.getTareStatus() == true) {
-#ifdef MY_DEBUG    
+#ifdef MY_LOCAL_DEBUG    
     Serial.println("Tare complete");
 #endif    
   }
@@ -199,7 +200,7 @@ void loop() {
     nNoUpdatesTemp = 0;
     send(msgTemp.set(temperature, 1));
 
-    #ifdef MY_DEBUG
+    #ifdef MY_LOCAL_DEBUG
     Serial.print("T: ");
     Serial.println(temperature);
     #endif
@@ -220,7 +221,7 @@ void loop() {
     nNoUpdatesHum = 0;
     send(msgHum.set(humidity, 1));
 
-    #ifdef MY_DEBUG
+    #ifdef MY_LOCAL_DEBUG
     Serial.print("H: ");
     Serial.println(humidity);
     #endif
