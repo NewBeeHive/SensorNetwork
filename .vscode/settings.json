@@ -1,0 +1,7 @@
+{
+    "arduino.additionalUrls": "",
+    "arduino.path": "/home/${user}/arduino-1.8.12",
+    "arduino.logLevel": "info",
+    "arduino.enableUSBDetection": true, 
+    "C_Cpp.intelliSenseEngine": "Tag Parser"
+}

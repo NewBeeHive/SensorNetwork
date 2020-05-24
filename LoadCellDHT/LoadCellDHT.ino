@@ -33,7 +33,7 @@
  */
 
 // Enable debug prints
-//#define MY_DEBUG
+#define MY_DEBUG
 #define MY_LOCAL_DEBUG
 
 // Enable and select radio type attached 
@@ -41,7 +41,7 @@
 //#define MY_RADIO_RFM69
 //#define MY_RS485
 #define MY_RADIO_RF24
-//#define MY_RF24_PA_LEVEL RF24_PA_LOW
+#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_GATEWAY_SERIAL 1
 
 #include <config.h>
@@ -74,8 +74,10 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 float lastTemp;
 float lastHum;
+float lastLoad;
 uint8_t nNoUpdatesTemp;
 uint8_t nNoUpdatesHum;
+uint8_t nNoUpdatesLoad;
 bool metric = true;
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
@@ -120,7 +122,9 @@ void setup() {
 
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
-    //Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
+#ifdef MY_LOCAL_DEBUG    
+    Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
+#endif    
   }
   // Sleep for the time of the minimum sampling period to give the sensor time to powesr up
   // (otherwise, timeout errors might occure for the first reading)
@@ -128,23 +132,28 @@ void setup() {
 
   float calValue; // calibration value
   calValue = 883.73; // uncomment this if you want to set this value in the sketch 
-  #if defined(ESP8266) 
+#if defined(ESP8266) 
   //EEPROM.begin(512); // uncomment this if you use ESP8266 and want to fetch the value from eeprom
-  #endif
+#endif
   //EEPROM.get(eepromAdress, calValue); // uncomment this if you want to fetch the value from eeprom
   
-  //Serial.begin(9600); delay(10);
+#ifdef MY_LOCAL_DEBUG    
   Serial.println();
   Serial.println("Starting...");
+#endif  
   LoadCell.begin();
   long stabilisingtime = 2000; // tare preciscion can be improved by adding a few seconds of stabilising time
   LoadCell.start(stabilisingtime);
   if(LoadCell.getTareTimeoutFlag()) {
+#ifdef MY_LOCAL_DEBUG    
     Serial.println("Tare timeout, check MCU>HX711 wiring and pin designations");
+#endif    
   }
   else {
     LoadCell.setCalFactor(calValue); // set calibration value (float)
+#ifdef MY_LOCAL_DEBUG    
     Serial.println("Startup + tare is complete");
+#endif    
   }
 }
 
@@ -155,13 +164,19 @@ void loop() {
 
   //get smoothed value from data set
   if (millis() > t + 250) {
-    float i = LoadCell.getData();
+    float load = LoadCell.getData();
+    if (load != lastLoad || nNoUpdatesLoad == FORCE_UPDATE_N_READS) {
+      // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
+      lastLoad = load;
+      // Reset no updates counter
+      nNoUpdatesLoad = 0;
 #ifdef MY_LOCAL_DEBUG
-    
-    Serial.print("Load_cell output val: ");
-    Serial.println(i);
+      Serial.print("L: ");
+      Serial.println(load);
 #endif    
-    send(msgLoad.set(i,1));
+      send(msgLoad.set(load,1));
+    }
+    nNoUpdatesLoad++;
     t = millis();
   }
 
@@ -185,7 +200,9 @@ void loop() {
   // Get temperature from DHT library
   float temperature = dht.getTemperature();
   if (isnan(temperature)) {
-    //Serial.println("Failed reading temperature from DHT!");
+#ifdef MY_LOCAL_DEBUG    
+    Serial.println("Failed reading temperature from DHT!");
+#endif    
   } else if (temperature != lastTemp || nNoUpdatesTemp == FORCE_UPDATE_N_READS) {
     // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
     lastTemp = temperature;
@@ -200,20 +217,21 @@ void loop() {
     nNoUpdatesTemp = 0;
     send(msgTemp.set(temperature, 1));
 
-    #ifdef MY_LOCAL_DEBUG
+#ifdef MY_LOCAL_DEBUG
     Serial.print("T: ");
     Serial.println(temperature);
-    #endif
+#endif
   } else {
     // Increase no update counter if the temperature stayed the same
     nNoUpdatesTemp++;
   }
 
   // Get humidity from DHT library
-  //float humidity = dht.getHumidity();
-  float humidity=0.0;
+  float humidity = dht.getHumidity();
   if (isnan(humidity)) {
-    //Serial.println("Failed reading humidity from DHT");
+#ifdef MY_LOCAL_DEBUG    
+    Serial.println("Failed reading humidity from DHT");
+#endif    
   } else if (humidity != lastHum || nNoUpdatesHum == FORCE_UPDATE_N_READS) {
     // Only send humidity if it changed since the last measurement or if we didn't send an update for n times
     lastHum = humidity;
@@ -221,10 +239,10 @@ void loop() {
     nNoUpdatesHum = 0;
     send(msgHum.set(humidity, 1));
 
-    #ifdef MY_LOCAL_DEBUG
+#ifdef MY_LOCAL_DEBUG
     Serial.print("H: ");
     Serial.println(humidity);
-    #endif
+#endif
   } else {
     // Increase no update counter if the humidity stayed the same
     nNoUpdatesHum++;
