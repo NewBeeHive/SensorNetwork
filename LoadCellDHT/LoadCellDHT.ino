@@ -33,8 +33,8 @@
  */
 
 // Enable debug prints
-#define MY_DEBUG
-#define MY_LOCAL_DEBUG
+//#define MY_DEBUG
+//#define MY_LOCAL_DEBUG
 
 // Enable and select radio type attached 
 ////#define MY_RADIO_RF24
@@ -45,6 +45,7 @@
 //#define MY_GATEWAY_SERIAL 1
 
 #include <config.h>
+#include <EEPROM.h>
 #include <HX711_ADC.h>
 #include <SPI.h>
 #include <MySensors.h>  
@@ -119,7 +120,6 @@ void presentation()
 }
 
 void setup() {
-
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
 #ifdef MY_LOCAL_DEBUG    
@@ -132,15 +132,20 @@ void setup() {
 
   float calValue; // calibration value
   calValue = 883.73; // uncomment this if you want to set this value in the sketch 
+#ifdef MY_LOCAL_DEBUG 
+  Serial.println(calValue); 
+#endif
 #if defined(ESP8266) 
   //EEPROM.begin(512); // uncomment this if you use ESP8266 and want to fetch the value from eeprom
 #endif
-  //EEPROM.get(eepromAdress, calValue); // uncomment this if you want to fetch the value from eeprom
+  EEPROM.get(eepromAdress, calValue); // uncomment this if you want to fetch the value from eeprom
   
-#ifdef MY_LOCAL_DEBUG    
+#ifdef MY_LOCAL_DEBUG 
+  Serial.println(calValue);   
   Serial.println();
   Serial.println("Starting...");
 #endif  
+
   LoadCell.begin();
   long stabilisingtime = 2000; // tare preciscion can be improved by adding a few seconds of stabilising time
   LoadCell.start(stabilisingtime);
@@ -158,26 +163,50 @@ void setup() {
 }
 
 void loop() {
+#ifdef MY_LOCAL_DEBUG
+#if !defined(MY_DEBUG)
+  Serial.begin(115200); delay(10);
+#endif
+#endif
   //update() should be called at least as often as HX711 sample rate; >10Hz@10SPS, >80Hz@80SPS
   //use of delay in sketch will reduce effective sample rate (be carefull with use of delay() in the loop)
-  LoadCell.update();
+  static boolean newDataReady = 0;
+  static int delay=0;
+#if 0  
+  if (Serial.available() > 0) {
+    float i;
+    char delay = Serial.read();
+    Serial.print("New Delay");    
+    Serial.println(delay);    
+    return;
+  } 
+#endif  
+  // check for new data/start next conversion:
+  newDataReady = false;
+  float load=0.0;
+  t = millis();
+  for (int i=0;i<80;i++) {
+    newDataReady=LoadCell.update();
+    sleep(20);
+  } 
 
   //get smoothed value from data set
-  if (millis() > t + 250) {
-    float load = LoadCell.getData();
-    if (load != lastLoad || nNoUpdatesLoad == FORCE_UPDATE_N_READS) {
-      // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
-      lastLoad = load;
-      // Reset no updates counter
-      nNoUpdatesLoad = 0;
-#ifdef MY_LOCAL_DEBUG
-      Serial.print("L: ");
+  if (newDataReady)
+  {
+      float load = LoadCell.getData();
       Serial.println(load);
-#endif    
-      send(msgLoad.set(load,1));
-    }
-    nNoUpdatesLoad++;
-    t = millis();
+      if (load != lastLoad || nNoUpdatesLoad == FORCE_UPDATE_N_READS) {
+        // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
+        lastLoad = load;
+        // Reset no updates counter
+        nNoUpdatesLoad = 0;
+  #ifdef MY_LOCAL_DEBUG
+        Serial.print("L: ");
+        Serial.println(load);
+  #endif    
+        Serial.println("a");
+        send(msgLoad.set(load,1));
+      }
   }
 
   //receive from serial terminal
@@ -189,10 +218,8 @@ void loop() {
 
   //check if last tare operation is complete
   if (LoadCell.getTareStatus() == true) {
-#ifdef MY_LOCAL_DEBUG    
     Serial.println("Tare complete");
-#endif    
-  }
+  }  
 
   // Force reading sensor, so it works also after sleep()
   dht.readSensor(true);
@@ -249,5 +276,5 @@ void loop() {
   }
 
   // Sleep for a while to save energy
-  sleep(UPDATE_INTERVAL); 
+  sleep(UPDATE_INTERVAL);
 }
