@@ -53,7 +53,7 @@
 #include <DHT.h>
 
 // Set this to the pin you connected the DHT's data pin to
-#define DHT_DATA_PIN 3
+#define DHT_DATA_PIN 5                                                                                                                                                                                                                                                                           
 
 // Set this offset if the sensor has a permanent small offset to the real temperatures.
 // In Celsius degrees (as measured by the device)
@@ -76,9 +76,9 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 float lastTemp;
 float lastHum;
 float lastLoad;
-uint8_t nNoUpdatesTemp;
-uint8_t nNoUpdatesHum;
-uint8_t nNoUpdatesLoad;
+uint8_t nNoUpdatesTemp=0;
+uint8_t nNoUpdatesHum=0;
+uint8_t nNoUpdatesLoad=0;
 bool metric = true;
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
@@ -98,12 +98,16 @@ DHT dht;
 
 //#include <EEPROM.h>
 
-//HX711 constructor (dout pin, sck pin):
-HX711_ADC LoadCell(4, 5);
+const int HX711_dout = 3; //mcu > HX711 dout pin, must be external interrupt capable!
+const int HX711_sck = 4; //mcu > HX711 sck pin
+
+//HX711 constructor:
+HX711_ADC LoadCell(HX711_dout, HX711_sck);
+//HX711_ADC LoadCell(4, 5);
 
 const int eepromAdress = 0;
-
-long t;
+boolean newDataReady = 0;
+unsigned long t=0;
 
 
 void presentation()  
@@ -131,7 +135,6 @@ void setup() {
   sleep(dht.getMinimumSamplingPeriod());
 
   float calValue; // calibration value
-  calValue = 883.73; // uncomment this if you want to set this value in the sketch 
 #ifdef MY_LOCAL_DEBUG 
   Serial.println(calValue); 
 #endif
@@ -158,7 +161,16 @@ void setup() {
     LoadCell.setCalFactor(calValue); // set calibration value (float)
 #ifdef MY_LOCAL_DEBUG    
     Serial.println("Startup + tare is complete");
-#endif    
+#endif  
+  }
+  attachInterrupt(digitalPinToInterrupt(HX711_dout), dataReadyISR, FALLING);
+}
+static int count=0;
+//interrupt routine:
+void dataReadyISR() {
+  count++;
+  if (LoadCell.update()) {
+    newDataReady = 1;
   }
 }
 
@@ -168,52 +180,43 @@ void loop() {
   Serial.begin(115200); delay(10);
 #endif
 #endif
-  //update() should be called at least as often as HX711 sample rate; >10Hz@10SPS, >80Hz@80SPS
-  //use of delay in sketch will reduce effective sample rate (be carefull with use of delay() in the loop)
-  static boolean newDataReady = 0;
   static int delay=0;
-#if 0  
-  if (Serial.available() > 0) {
-    float i;
-    char delay = Serial.read();
-    Serial.print("New Delay");    
-    Serial.println(delay);    
-    return;
-  } 
-#endif  
-  // check for new data/start next conversion:
-  newDataReady = false;
-  float load=0.0;
-  t = millis();
-  for (int i=0;i<80;i++) {
-    newDataReady=LoadCell.update();
-    sleep(20);
-  } 
+#ifdef MY_LOCAL_DEBUG 
+  Serial.print("Load_cell int count: ");
+  Serial.println(count); 
+#endif
 
-  //get smoothed value from data set
-  if (newDataReady)
-  {
-      float load = LoadCell.getData();
-      Serial.println(load);
-      if (load != lastLoad || nNoUpdatesLoad == FORCE_UPDATE_N_READS) {
-        // Only send temperature if it changed since the last measurement or if we didn't send an update for n times
-        lastLoad = load;
-        // Reset no updates counter
-        nNoUpdatesLoad = 0;
-  #ifdef MY_LOCAL_DEBUG
-        Serial.print("L: ");
-        Serial.println(load);
-  #endif    
-        Serial.println("a");
-        send(msgLoad.set(load,1));
-      }
+    // get smoothed value from the dataset:
+  if (newDataReady) {
+    float load = LoadCell.getData();
+    Serial.println(load);
+    Serial.println(lastLoad);
+    Serial.println(nNoUpdatesLoad);
+    float abs(load - lastLoad);
+    newDataReady = 0;
+    nNoUpdatesLoad++;
+    if ((fabs(load - lastLoad)<20.0) || (nNoUpdatesLoad == FORCE_UPDATE_N_READS)) {
+#ifdef MY_LOCAL_DEBUG      
+    Serial.print("Load_cell output val: ");
+    Serial.print(i);
+    Serial.print("  ");
+    Serial.println(millis() - t);
+#endif    
+      nNoUpdatesLoad=0;
+      send(msgLoad.set(load, 1));  
+    }
+    lastLoad = load;
   }
 
   //receive from serial terminal
   if (Serial.available() > 0) {
-    float i;
     char inByte = Serial.read();
-    if (inByte == 't') LoadCell.tareNoDelay();
+    Serial.println(inByte);      
+    if (inByte == 't') 
+    {
+      Serial.println("Tare start");      
+      LoadCell.tareNoDelay();
+    }
   }
 
   //check if last tare operation is complete
@@ -276,5 +279,10 @@ void loop() {
   }
 
   // Sleep for a while to save energy
-  sleep(UPDATE_INTERVAL);
+  long t = millis();
+  long sleepTime = UPDATE_INTERVAL;
+  do {
+    sleep(sleepTime);
+    sleepTime = sleepTime + t - millis();
+   } while (sleepTime>0);
 }
