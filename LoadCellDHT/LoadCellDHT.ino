@@ -189,13 +189,9 @@ void loop() {
     // get smoothed value from the dataset:
   if (newDataReady) {
     float load = LoadCell.getData();
-    Serial.println(load);
-    Serial.println(lastLoad);
-    Serial.println(nNoUpdatesLoad);
-    float abs(load - lastLoad);
-    newDataReady = 0;
+    float loadDiff = fabs(load - lastLoad);
     nNoUpdatesLoad++;
-    if ((fabs(load - lastLoad)<20.0) || (nNoUpdatesLoad == FORCE_UPDATE_N_READS)) {
+    if ((loadDiff>10.0) || (nNoUpdatesLoad == FORCE_UPDATE_N_READS)) {
 #ifdef MY_LOCAL_DEBUG      
     Serial.print("Load_cell output val: ");
     Serial.print(i);
