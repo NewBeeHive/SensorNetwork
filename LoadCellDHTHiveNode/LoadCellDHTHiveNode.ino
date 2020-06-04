@@ -33,8 +33,8 @@
  */
 
 // Enable debug prints
-#define MY_DEBUG
-#define MY_LOCAL_DEBUG
+//#define MY_DEBUG
+//#define MY_LOCAL_DEBUG
 
 // Enable and select radio type attached 
 ////#define MY_RADIO_RF24
@@ -46,6 +46,7 @@
 
 // Enabled repeater feature for this node
 #define MY_REPEATER_FEATURE
+#define MY_NODE_ID 1
 
 #include <config.h>
 #include <EEPROM.h>
@@ -114,7 +115,8 @@ unsigned long t=0;
 
 
 void presentation()  
-{ "HiveNode", "1.1");
+{ 
+  sendSketchInfo("HiveNode", "1.1");
 
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
@@ -176,6 +178,17 @@ void dataReadyISR() {
 }
 
 void loop() {
+  static long t = 0;
+  static long sleepTime = 0;
+  
+  // Sleep for a while to save energy
+  sleep(sleepTime);
+  sleepTime = sleepTime + t - millis();
+  if (sleepTime>0) 
+  {
+    return;
+  }
+
 #ifdef MY_LOCAL_DEBUG
 #if !defined(MY_DEBUG)
   Serial.begin(115200); delay(10);
@@ -273,11 +286,7 @@ void loop() {
     nNoUpdatesHum++;
   }
 
-  // Sleep for a while to save energy
-  long t = millis();
-  long sleepTime = UPDATE_INTERVAL;
-  do {
-    sleep(sleepTime);
-    sleepTime = sleepTime + t - millis();
-   } while (sleepTime>0);
+  // Initialize Sleep for a while to save energy
+  t = millis();
+  sleepTime = UPDATE_INTERVAL;
 }

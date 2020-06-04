@@ -32,6 +32,10 @@
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
 
+#define MY_NODE_ID 2
+#define MY_PARENT_NODE_ID 1
+#define MY_PARENT_NODE_IS_STATIC
+
 #include <MySensors.h>  
 #include <DallasTemperature.h>
 #include <OneWire.h>
@@ -40,7 +44,7 @@
 
 #define ONE_WIRE_BUS 3 // Pin where dallase sensor is connected 
 #define MAX_ATTACHED_DS18B20 16
-unsigned long SLEEP_TIME = 1000; // Sleep time between reads (in milliseconds)
+unsigned long SLEEP_TIME = 10000; // Sleep time between reads (in milliseconds)
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
 float lastTemperature[MAX_ATTACHED_DS18B20];
@@ -66,10 +70,10 @@ void setup()
 void presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Temperature Sensor", "1.1");
-Serial.begin(9600);
+
   // Fetch the number of attached temperature sensors  
   numSensors = sensors.getDeviceCount();
-return;
+
   // Present all sensors to controller
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {   
      present(i, S_TEMP);
@@ -78,10 +82,7 @@ return;
 
 void loop()     
 {     
-  Serial.println(("Temp "));
-  //Serial.println(temperature);
-  sleep(1000);
-  return;
+
   // Fetch temperatures from Dallas sensors
   sensors.requestTemperatures();
 
