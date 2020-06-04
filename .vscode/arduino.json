@@ -1,7 +1,7 @@
 {
-    "board": "arduino:avr:pro",
+    "board": "arduino:avr:nano",
     "sketch": "FrameTemperature/FrameTemperature.ino",
     "port": "/dev/ttyUSB0",
-    "configuration": "cpu=16MHzatmega328",
+    "configuration": "cpu=atmega328old",
     "programmer": "AVRISP mkII"
 }

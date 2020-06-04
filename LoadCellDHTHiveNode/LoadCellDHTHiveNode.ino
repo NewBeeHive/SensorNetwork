@@ -49,11 +49,9 @@
 #define MY_NODE_ID 1
 
 #include <config.h>
-#include <EEPROM.h>
 #include <HX711_ADC.h>
 #include <SPI.h>
 #include <MySensors.h>  
-//#include <DHT_U.h>
 #include <DHT.h>
 
 // Set this to the pin you connected the DHT's data pin to
@@ -65,7 +63,7 @@
 
 // Sleep time between sensor updates (in milliseconds)
 // Must be >1000ms for DHT22 and >2000ms for DHT11
-static const uint64_t UPDATE_INTERVAL = 1000;
+static const uint64_t UPDATE_INTERVAL = 10000;
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
 // timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
@@ -141,11 +139,7 @@ void setup() {
 #ifdef MY_LOCAL_DEBUG 
   Serial.println(calValue); 
 #endif
-#if defined(ESP8266) 
-  //EEPROM.begin(512); // uncomment this if you use ESP8266 and want to fetch the value from eeprom
-#endif
-  EEPROM.get(eepromAdress, calValue); // uncomment this if you want to fetch the value from eeprom
-  
+  calValue=loadState(eepromAdress);
 #ifdef MY_LOCAL_DEBUG 
   Serial.println(calValue);   
   Serial.println();
@@ -180,7 +174,7 @@ void dataReadyISR() {
 void loop() {
   static long t = 0;
   static long sleepTime = 0;
-  
+
   // Sleep for a while to save energy
   sleep(sleepTime);
   sleepTime = sleepTime + t - millis();
@@ -188,6 +182,7 @@ void loop() {
   {
     return;
   }
+
 
 #ifdef MY_LOCAL_DEBUG
 #if !defined(MY_DEBUG)
@@ -208,8 +203,9 @@ void loop() {
     if ((loadDiff>10.0) || (nNoUpdatesLoad == FORCE_UPDATE_N_READS)) {
 #ifdef MY_LOCAL_DEBUG      
     Serial.print("Load_cell output val: ");
-    Serial.print(load);
+    Serial.println(load);
 #endif    
+   
       nNoUpdatesLoad=0;
       send(msgLoad.set(load, 1));  
     }
@@ -289,4 +285,10 @@ void loop() {
   // Initialize Sleep for a while to save energy
   t = millis();
   sleepTime = UPDATE_INTERVAL;
+  #if 0
+  do {
+    sleep(sleepTime);
+    sleepTime = sleepTime + t - millis();
+  } while (sleepTime>0);
+  #endif
 }

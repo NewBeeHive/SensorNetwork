@@ -11,9 +11,9 @@
 // This example shows how to calibrate the load cell and optionally save the calibration  
 // value to EEPROM, and also how to change the value.
 // The value can later be fetched from EEPROM in your project sketch.
-
+#define MY_RADIO_RF24
 #include <HX711_ADC.h>
-#include <EEPROM.h>
+#include <MySensors.h>  
 
 //HX711 constructor (dout pin, sck pin):
 HX711_ADC LoadCell(3, 4);
@@ -60,11 +60,13 @@ void calibrate() {
         #if defined(ESP8266) 
         EEPROM.begin(512);
         #endif
-        EEPROM.put(eepromAdress, c);
+        saveState(eepromAdress, c);
+        //EEPROM.put(eepromAdress, c);
         #if defined(ESP8266)
         EEPROM.commit();
         #endif
-        EEPROM.get(eepromAdress, c);
+        c=loadState(eepromAdress);
+        //EEPROM.get(eepromAdress, c);
         Serial.print("Value ");
         Serial.print(c);
         Serial.print(" saved to EEPROM address: ");
@@ -116,11 +118,13 @@ void changeSavedCalFactor() {
         #if defined(ESP8266)
         EEPROM.begin(512);
         #endif
-        EEPROM.put(eepromAdress, c);
+        saveState(eepromAdress, c);
+        //EEPROM.put(eepromAdress, c);
         #if defined(ESP8266)
         EEPROM.commit();
         #endif
-        EEPROM.get(eepromAdress, c);
+        c=loadState(eepromAdress);
+        //EEPROM.get(eepromAdress, c);
         Serial.print("Value ");
         Serial.print(c);
         Serial.print(" saved to EEPROM address: ");
