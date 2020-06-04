@@ -1,5 +1,7 @@
 {
-    "board": "arduino:avr:uno",
-    "sketch": "LoadCellDHT/LoadCellDHT.ino",
-    "port": "/dev/ttyACM0"
+    "board": "arduino:avr:pro",
+    "sketch": "FrameTemperature/FrameTemperature.ino",
+    "port": "/dev/ttyUSB0",
+    "configuration": "cpu=16MHzatmega328",
+    "programmer": "AVRISP mkII"
 }

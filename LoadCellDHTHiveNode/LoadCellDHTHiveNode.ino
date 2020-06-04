@@ -44,6 +44,9 @@
 #define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_GATEWAY_SERIAL 1
 
+// Enabled repeater feature for this node
+#define MY_REPEATER_FEATURE
+
 #include <config.h>
 #include <EEPROM.h>
 #include <HX711_ADC.h>
@@ -111,9 +114,7 @@ unsigned long t=0;
 
 
 void presentation()  
-{ 
-  // Send the sketch version information to the gateway
-  sendSketchInfo("TemperatureAndHumidity", "1.1");
+{ "HiveNode", "1.1");
 
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
