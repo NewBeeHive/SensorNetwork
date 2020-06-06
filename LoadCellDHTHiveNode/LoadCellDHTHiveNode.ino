@@ -269,10 +269,7 @@ void loop() {
   } else if (humidity != lastHum || nNoUpdatesHum == FORCE_UPDATE_N_READS) {
     // Only send humidity if it changed since the last measurement or if we didn't send an update for n times
     lastHum = humidity;
-    // Reset no updates counter
-    nNoUpdatesHum = 0;
-    send(msgHum.set(humidity, 1));
-
+    // >
 #ifdef MY_LOCAL_DEBUG
     Serial.print("H: ");
     Serial.println(humidity);
