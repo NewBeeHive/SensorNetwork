@@ -39,7 +39,7 @@
 #define MY_NODE_ID 4
 #include <MySensors.h>
 
-int BATTERY_SENSE_PIN = A0;  // select the input pin for the battery sense point
+int BATTERY_SENSE_PIN = A1;  // select the input pin for the battery sense point
 
 uint32_t SLEEP_TIME = 900000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;

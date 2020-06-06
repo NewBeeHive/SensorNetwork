@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:nano",
-    "sketch": "FrameTemperatureDHT/FrameTemperatureDHT.ino",
+    "sketch": "FrameTemperatureDHTBattery/FrameTemperatureDHTBattery.ino",
     "programmer": "AVRISP mkII",
     "configuration": "cpu=atmega328old",
     "port": "/dev/ttyUSB0"
