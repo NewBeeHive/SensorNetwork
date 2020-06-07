@@ -26,8 +26,8 @@
 
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG 
-
+//#define MY_DEBUG 
+//#define MY_LOCAL_DEBUG
 // Enable and select radio type attached
 #define MY_RADIO_RF24
 //#define MY_RADIO_RFM69
@@ -40,7 +40,7 @@
 #include <DHT.h>
 
 // Set this to the pin you connected the DHT's data pin to
-#define DHT_DATA_PIN 4                                                                                                                                                                                                                                                                           
+#define DHT_DATA_PIN 5                                                                                                                                                                                                                                                                          
 
 // Set this offset if the sensor has a permanent small offset to the real temperatures.
 // In Celsius degrees (as measured by the device)
@@ -72,7 +72,7 @@
 
 // Sleep time between sensor updates (in milliseconds)
 // Must be >1000ms for DHT22 and >2000ms for DHT11
-static const uint64_t UPDATE_INTERVAL = 3000;
+static const uint64_t UPDATE_INTERVAL = 600000;
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
 // timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
@@ -160,7 +160,7 @@ void loop()
 
   // Get temperature from DHT library
   float temperature = dht.getTemperature();
-  if (isnan(temperature)) {
+   if (isnan(temperature)) {
 #ifdef MY_LOCAL_DEBUG    
     Serial.println("Failed reading temperature from DHT!");
 #endif    
@@ -290,11 +290,6 @@ void loop()
     Serial.print("Altitude = ");
     Serial.print(altitude);
     Serial.println(" meters");
-
-    Serial.print("Pressure at sealevel (calculated) = ");
-    Serial.print(sealevelPressure());
-    Serial.println(" Pa");
-
 #endif
   } else {
     // Increase no update counter if the temperature stayed the same
