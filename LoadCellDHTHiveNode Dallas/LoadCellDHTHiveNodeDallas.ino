@@ -45,7 +45,7 @@
 //#define MY_GATEWAY_SERIAL 1
 
 // Enabled repeater feature for this node
-#define MY_REPEATER_FEATURE
+//#define MY_REPEATER_FEATURE
 #define MY_NODE_ID 1
 
 #include <config.h>
@@ -57,13 +57,16 @@
 
 #define COMPARE_TEMP 0 // Send temperature only if changed? 1 = Yes 0 = No
 
+const int HX711_dout = 3; //mcu > HX711 dout pin, must be external interrupt capable!
+const int HX711_sck = 4; //mcu > HX711 sck pin
 #define ONE_WIRE_BUS 5 // Pin where dallase sensor is connected 
+
 #define MAX_ATTACHED_DS18B20 3
 unsigned long SLEEP_TIME = 10000; // Sleep time between reads (in milliseconds)
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
 float lastTemperature[MAX_ATTACHED_DS18B20];
-int numSensors=1;
+int numSensors;
 bool receivedConfig = false;
 bool metric = true;
 
@@ -73,7 +76,7 @@ bool metric = true;
 
 // Sleep time between sensor updates (in milliseconds)
 // Must be >1000ms for DHT22 and >2000ms for DHT11
-static const uint64_t UPDATE_INTERVAL = 10000;
+static const uint64_t UPDATE_INTERVAL = 600000;
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
 // timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
@@ -88,7 +91,7 @@ float lastLoad;
 uint8_t nNoUpdatesLoad=0;
 
 // Initialize  messages
-MyMessage msg(0,V_TEMP);
+MyMessage msgTemp(0,V_TEMP);
 MyMessage msgLoad(CHILD_ID_WEIGHT, V_WEIGHT);
 
 
@@ -104,32 +107,31 @@ MyMessage msgLoad(CHILD_ID_WEIGHT, V_WEIGHT);
 
 //#include <EEPROM.h>
 
-const int HX711_dout = 3; //mcu > HX711 dout pin, must be external interrupt capable!
-const int HX711_sck = 4; //mcu > HX711 sck pin
-#define ONE_WIRE_BUS 5 // Pin where dallase sensor is connected 
+
 
 //HX711 constructor:
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
-//HX711_ADC LoadCell(4, 5);
 
 const int eepromAdress = 0;
 boolean newDataReady = 0;
 unsigned long t=0;
+float calValue;
 
-void before()
-{
-  // Startup up the OneWire library
-  sensors.begin();
-}
 
 void presentation()  
 { 
   sendSketchInfo("HiveNode", "1.1");
 
+  // Present all sensors to controller
+  // Startup up the OneWire library
+  sensors.begin();  
+
   // Fetch the number of attached temperature sensors  
   numSensors = sensors.getDeviceCount();
-
-  // Present all sensors to controller
+#ifdef MY_LOCAL_DEBUG 
+  Serial.println("Number of temperature Sensors");   
+  Serial.println(numSensors);
+#endif  
   for (int i=0; i<numSensors && i<MAX_ATTACHED_DS18B20; i++) {   
      present(i, S_TEMP);
   }
@@ -141,15 +143,17 @@ void presentation()
 
 void setup() 
 {
-  // requestTemperatures() will not block current thread
-  sensors.setWaitForConversion(false);
-  
-  int calValue=loadState(eepromAdress);
 #ifdef MY_LOCAL_DEBUG 
   Serial.println(calValue);   
   Serial.println();
   Serial.println("Starting...");
 #endif  
+
+  
+  // requestTemperatures() will not block current thread
+  sensors.setWaitForConversion(false);
+  
+  calValue=loadState(eepromAdress);
 
   LoadCell.begin();
   long stabilisingtime = 2000; // tare preciscion can be improved by adding a few seconds of stabilising time
@@ -181,13 +185,14 @@ void loop() {
   static long sleepTime = 0;
 
   // Sleep for a while to save energy
+#if 0
   sleep(sleepTime);
   sleepTime = sleepTime + t - millis();
   if (sleepTime>0) 
   {
     return;
   }
-
+#endif
 
 #ifdef MY_LOCAL_DEBUG
 #if !defined(MY_DEBUG)
@@ -246,8 +251,6 @@ void loop() {
 
     // Fetch and round temperature to one decimal
     float temperature = static_cast<float>(static_cast<int>((getControllerConfig().isMetric?sensors.getTempCByIndex(i):sensors.getTempFByIndex(i)) * 10.)) / 10.;
-  Serial.print(("Temp "));
-  Serial.println(temperature);
     // Only send data if temperature has changed and no error
     #if COMPARE_TEMP == 1
     if (lastTemperature[i] != temperature && temperature != -127.00 && temperature != 85.00) {
@@ -256,7 +259,7 @@ void loop() {
     #endif
 
       // Send in the new temsssssssperature
-      send(msg.setSensor(i).set(temperature,1));
+      send(msgTemp.setSensor(i).set(temperature,1));
       // Save new temperatures for next compare
       lastTemperature[i]=temperature;
     }
@@ -265,10 +268,10 @@ void loop() {
   // Initialize Sleep for a while to save energy
   t = millis();
   sleepTime = UPDATE_INTERVAL;
-  #if 0
   do {
-    sleep(sleepTime);
+    //sleep(sleepTime);
+    sleep(digitalPinToInterrupt(2),CHANGE,sleepTime);
     sleepTime = sleepTime + t - millis();
   } while (sleepTime>0);
-  #endif
+  
 }
