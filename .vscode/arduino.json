@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:pro",
-    "sketch": "LoadCellDHTHiveNode Dallas/LoadCellDHTHiveNodeDallas.ino",
+    "sketch": "LoadCellDHTHiveNodeDallasSound/LoadCellDHTHiveNodeDallasSound.ino",
     "programmer": "AVRISP mkII",
     "configuration": "cpu=16MHzatmega328",
     "port": "/dev/ttyUSB0"
