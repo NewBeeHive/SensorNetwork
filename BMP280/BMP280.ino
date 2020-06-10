@@ -13,6 +13,7 @@
  
 // define device I2C address: 0x76 or 0x77 (0x77 is library default address)
 #define BME280_I2C_ADDRESS  0x76
+#define LCD_ON_OFF  8
  
 Adafruit_BME280 bme280;
  
@@ -25,6 +26,8 @@ void setup()
  
   // set up the LCD's number of columns and rows
   lcd.begin(20, 4);
+
+  pinMode(LCD_ON_OFF, INPUT);    // sets the digital pin 7 as input
   
   Serial.println(F("Arduino + BME280 sensor"));
   
@@ -88,35 +91,45 @@ void loop()
   float humidity    = bme280.readHumidity();     // get humidity
   float pressure    = bme280.readPressure();     // get pressure
   float altitude_   = bme280.readAltitude(1013.25); // get altitude (this should be adjusted to your local forecast)
-  lcd.clear();
-  lcd.setCursor(2, (i%2));
-  lcd.print("Arduino + BME280");
-  lcd.setCursor(0, (i+1));
-  lcd.print("Temp =");
-  lcd.setCursor(0, (i+2));
-  lcd.print("Humi =");
-  lcd.setCursor(0, (i+3));
-  lcd.print("Pres =");
-  lcd.setCursor(0, (i+4));
-  lcd.print("Alt  =");  
-  // print data on the LCD screen
-  // 1: print temperature
-  sprintf(text, "%d.%02u%cC  ", (int)temperature, (int)(temperature * 100)%100, 223);
-  lcd.setCursor(7, (i+1));
-  lcd.print(text);
-  // 2: print humidity
-  sprintf(text, "%d.%02u %%  ", (int)humidity, (int)(humidity * 100)%100);
-  lcd.setCursor(7, (i+2));
-  lcd.print(text);
-  // 3: print pressure
-  sprintf(text, "%u.%02u hPa ", (int)(pressure / 100), (int)((uint32_t)pressure % 100));
-  lcd.setCursor(7, (i+3));
-  lcd.print(text);
-   // 4: print altitude
-  sprintf(text, "%u.%02u m ", (int)(altitude_), (int)((uint32_t)altitude_ % 100));
-  lcd.setCursor(7, (i+4));
-  lcd.print(text);
-  i--;
+  int val = digitalRead(LCD_ON_OFF);
+  if (val)
+  {
+    lcd.display();
+    lcd.clear();
+    lcd.setCursor(2, (i%2));
+    lcd.print("Arduino + BME280");
+    lcd.setCursor(0, (i+1));
+    lcd.print("Temp =");
+    lcd.setCursor(0, (i+2));
+    lcd.print("Humi =");
+    lcd.setCursor(0, (i+3));
+    lcd.print("Pres =");
+    lcd.setCursor(0, (i+4));
+    lcd.print("Alt  =");  
+    // print data on the LCD screen
+    // 1: print temperature
+    sprintf(text, "%d.%02u%cC  ", (int)temperature, (int)(temperature * 100)%100, 223);
+    lcd.setCursor(7, (i+1));
+    lcd.print(text);
+    // 2: print humidity
+    sprintf(text, "%d.%02u %%  ", (int)humidity, (int)(humidity * 100)%100);
+    lcd.setCursor(7, (i+2));
+    lcd.print(text);
+    // 3: print pressure
+    sprintf(text, "%u.%02u hPa ", (int)(pressure / 100), (int)((uint32_t)pressure % 100));
+    lcd.setCursor(7, (i+3));
+    lcd.print(text);
+    // 4: print altitude
+    sprintf(text, "%u.%02u m ", (int)(altitude_), (int)((uint32_t)altitude_ % 100));
+    lcd.setCursor(7, (i+4));
+    lcd.print(text);
+    i--;
+  }
+  else
+  {
+    lcd.noDisplay();
+  }
+  
 
   // print data on the serial monitor software
   // 1: print temperature
