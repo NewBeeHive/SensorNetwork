@@ -239,17 +239,7 @@ void loop() {
     send(soundSample.set(">>>"));
     for(int i=0; i<(SOUND_SAMPLES); i++)
     {
-        sprintf(payload+((i%SOUND_SAMPLES_SEND)*9),"%05d.%02d;", (int)vReal[i], (int)(vReal[i]*100)%100);    //View only this line in serial plotter to visualize the bins
-
-        if (i%SOUND_SAMPLES_SEND) 
-        {
-          payload[SOUND_SAMPLES_SEND*9]=0;
-          send(soundSample.set(payload));
-        }
-    }
-    send(soundSample.set("<<<"));
-
-    if (samplingCount<SAMPLING_SERIE)
+        sprintf(payload+((i%SOUND_SAMPLES_SENDlingCount<SAMPLING_SERIE)
     {
       samplingCount++;
       return;
