@@ -3,6 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/markus/Arduino/libraries/Adafruit_BME280_Library",
+                "/home/markus/Arduino/libraries/Adafruit_BMP280_Library",
                 "/home/markus/arduino-1.8.12/tools/**",
                 "/home/markus/arduino-1.8.12/hardware/arduino/avr/**"
             ],

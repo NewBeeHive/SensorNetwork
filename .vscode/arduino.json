@@ -2,5 +2,5 @@
     "board": "arduino:avr:uno",
     "sketch": "BMP280/BMP280.ino",
     "programmer": "AVRISP mkII",
-    "port": "/dev/ttyACM1"
+    "port": "/dev/ttyACM0"
 }
