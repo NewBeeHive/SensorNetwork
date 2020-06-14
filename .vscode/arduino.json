@@ -1,6 +1,7 @@
 {
-    "board": "arduino:avr:uno",
-    "sketch": "BMP280/BMP280.ino",
+    "board": "arduino:avr:nano",
+    "sketch": "FrameTemperatureBME180/FrameTemperatureBME180.ino",
     "programmer": "AVRISP mkII",
-    "port": "/dev/ttyACM0"
+    "port": "/dev/ttyUSB0",
+    "configuration": "cpu=atmega328old"
 }

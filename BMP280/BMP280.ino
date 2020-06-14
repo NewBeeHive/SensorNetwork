@@ -14,7 +14,7 @@
 // define device I2C address: 0x76 or 0x77 (0x77 is library default address)
 #define BME280_I2C_ADDRESS  0x76
 #define LCD_ON_OFF  8
- 
+
 Adafruit_BME280 bme280;
  
 // LCD module connections (RS, E, D4, D5, D6, D7)
